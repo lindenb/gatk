@@ -33,6 +33,8 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.EnumSet;
 
+import javax.xml.stream.XMLStreamException;
+
 /**
  * Factory methods to create VariantContext writers
  *
@@ -76,13 +78,27 @@ public class VariantContextWriterFactory {
             return new BCF2Writer(location, output, refDict,
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES));
-        else {
+        else if(location!=null && location.getName().endsWith(".xml"))
+        	{
+        	try {
+            return new XMLVariantContextWriter(location, output, refDict,
+                    options.contains(Options.INDEX_ON_THE_FLY),
+                    options.contains(Options.DO_NOT_WRITE_GENOTYPES),
+                    options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
+                    );
+        	} catch(XMLStreamException err)
+        		{
+        		throw new UserException.CouldNotCreateOutputFile(location, "Unable to create XML writer", err);
+        		}
+        	}
+        else
+        	{
             return new VCFWriter(location, output, refDict,
                     options.contains(Options.INDEX_ON_THE_FLY),
                     options.contains(Options.DO_NOT_WRITE_GENOTYPES),
                     options.contains(Options.ALLOW_MISSING_FIELDS_IN_HEADER));
-        }
-    }
+        	}
+    	}	
 
     /**
      * Should we output a BCF file based solely on the name of the file at location?
